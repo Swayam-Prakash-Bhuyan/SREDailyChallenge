@@ -1,6 +1,3 @@
-
----
-
 # Day 15 — Linux Networking Challenges (Daily DevOps + SRE Challenge Series — Season 2)
 
 ---
@@ -9,7 +6,7 @@
 
 Welcome to Day 15 of the Daily DevOps + SRE Challenge Series – Season 2! 🎉
 
-Today, you’ll dive into essential **Linux networking skills** through practical, story-based scenarios. You’ll configure IP addresses, set up namespaces, simulate routing, and debug traffic issues—all on your local machine without any complex setup. By the end, you’ll:
+Today, you'll dive into essential **Linux networking skills** through practical, story-based scenarios. You'll configure IP addresses, set up namespaces, simulate routing, and debug traffic issues—all on your local machine without any complex setup. By the end, you'll:
 
 * Understand and troubleshoot the **OSI & TCP/IP layers** in real-world failures.
 * Configure **IPv4/IPv6 addressing**, resolve subnetting conflicts, and simulate enterprise VPC designs.
@@ -20,12 +17,12 @@ Today, you’ll dive into essential **Linux networking skills** through practica
 
 ## Why This Matters?
 
-Networking is the backbone of everything—cloud apps, Kubernetes clusters, even CI/CD pipelines. If you can’t debug connectivity, you’ll get stuck in outages fast.
+Networking is the backbone of everything—cloud apps, Kubernetes clusters, even CI/CD pipelines. If you can't debug connectivity, you'll get stuck in outages fast.
 
-* **Real-World Edge:** Most outages aren’t due to servers crashing—they’re due to misconfigured routes, DNS failures, or firewall issues.
+* **Real-World Edge:** Most outages aren't due to servers crashing—they're due to misconfigured routes, DNS failures, or firewall issues.
 * **SRE Superpower:** Knowing the **why ping works but app fails** scenario makes you 10x faster in production war rooms.
 * **Cloud Readiness:** VPC, subnets, and dual-stack IPv4/IPv6 configs are daily tasks for AWS/GCP/Azure engineers.
-* **Interview Gold:** “Why can two hosts ping but not load HTTP?” or “How do you debug duplicate IP conflicts?”—classic SRE questions.
+* **Interview Gold:** "Why can two hosts ping but not load HTTP?" or "How do you debug duplicate IP conflicts?"—classic SRE questions.
 * **Security Awareness:** ARP spoofing and wrong subnet masks are real threats in production, not just lab theory.
 
 ---
@@ -74,7 +71,7 @@ Because when something breaks (web app not loading, DNS failing, packets droppin
 ### Key concepts & simple analogies
 
 * **IP = house number** — tells you *where* to go.
-* **MAC = person’s face** — used to deliver inside the same building (LAN).
+* **MAC = person's face** — used to deliver inside the same building (LAN).
 * **Ports (TCP/UDP) = apartment door numbers** — same house, many services.
 * **Firewall = security guard at door** — can block specific ports/protocols.
 
@@ -109,21 +106,21 @@ OSI stack:
 
 ```mermaid
 graph TB
-A[Application (HTTP/DNS/SSH)] --> B[Transport (TCP/UDP)]
-B --> C[Network (IP/Routing)]
-C --> D[Data Link (Ethernet/ARP)]
-D --> E[Physical (Cable/Wireless)]
+    A[Application HTTP/DNS/SSH] --> B[Transport TCP/UDP]
+    B --> C[Network IP/Routing]
+    C --> D[Data Link Ethernet/ARP]
+    D --> E[Physical Cable/Wireless]
 ```
 
 Packet debugging flow:
 
 ```mermaid
 flowchart LR
-UserAction[User opens browser] --> App[Application: HTTP request]
-App --> Transport[TCP handshake/port]
-Transport --> Network[IP routing/next-hop]
-Network --> Link[ARP/MAC resolution]
-Link --> Physical[Wire/WiFi]
+    UserAction[User opens browser] --> App[Application: HTTP request]
+    App --> Transport[TCP handshake/port]
+    Transport --> Network[IP routing/next-hop]
+    Network --> Link[ARP/MAC resolution]
+    Link --> Physical[Wire/WiFi]
 ```
 
 ---
@@ -134,7 +131,7 @@ Link --> Physical[Wire/WiFi]
 IP addresses uniquely identify hosts on a network. IPv4 is 32-bit (e.g., `192.168.1.10`), IPv6 is 128-bit (e.g., `2001:db8::1`).
 
 **Why important?**
-If you don’t know addressing basics, you’ll misconfigure masks, gateways, or try to reach the wrong network. IP addressing also affects routing, ACLs, NAT — everything SREs care about.
+If you don't know addressing basics, you'll misconfigure masks, gateways, or try to reach the wrong network. IP addressing also affects routing, ACLs, NAT — everything SREs care about.
 
 ---
 
@@ -185,10 +182,11 @@ If you don’t know addressing basics, you’ll misconfigure masks, gateways, or
 
 ```mermaid
 flowchart LR
-App[App creates packet] --> IPPkt[IP packet with dest IP]
-IPPkt --> Router{Is dest in local subnet?}
-Router -->|Yes| ARP[Do ARP -> resolve MAC] --> Send[Send frame on LAN]
-Router -->|No| GW[Send to default gateway]
+    App[App creates packet] --> IPPkt[IP packet with dest IP]
+    IPPkt --> Router{Is dest in local subnet?}
+    Router -->|Yes| ARP[Do ARP resolve MAC] 
+    ARP --> Send[Send frame on LAN]
+    Router -->|No| GW[Send to default gateway]
 ```
 
 ---
@@ -233,10 +231,10 @@ To allocate IPs to teams, limit broadcast domains, design VPCs, and avoid overla
 
 ```mermaid
 graph TD
-A[10.0.0.0/24] --> B[10.0.0.0/26]
-A --> C[10.0.0.64/26]
-A --> D[10.0.0.128/26]
-A --> E[10.0.0.192/26]
+    A[10.0.0.0/24] --> B[10.0.0.0/26]
+    A --> C[10.0.0.64/26]
+    A --> D[10.0.0.128/26]
+    A --> E[10.0.0.192/26]
 ```
 
 ---
@@ -244,7 +242,7 @@ A --> E[10.0.0.192/26]
 ## ARP (Address Resolution Protocol) — Introduction
 
 **What is it?**
-ARP maps IPv4 addresses to MAC addresses inside a LAN. It’s how IP packets get delivered to the correct NIC inside the same broadcast domain.
+ARP maps IPv4 addresses to MAC addresses inside a LAN. It's how IP packets get delivered to the correct NIC inside the same broadcast domain.
 
 **Why ARP matters?**
 If ARP is wrong or spoofed, your traffic can go to the wrong machine, be dropped, or be intercepted.
@@ -270,7 +268,7 @@ If ARP is wrong or spoofed, your traffic can go to the wrong machine, be dropped
 ### ARP security problems
 
 * **Duplicate IP:** Two hosts claim same IP → flapping / inconsistent replies.
-* **ARP spoofing/poisoning:** Attacker sends fake ARP replies linking victim/gateway IP to attacker’s MAC → MITM.
+* **ARP spoofing/poisoning:** Attacker sends fake ARP replies linking victim/gateway IP to attacker's MAC → MITM.
 * **Mitigations:** static ARP entries (for critical hosts), switch DAI, encryption (TLS).
 
 ---
@@ -279,14 +277,14 @@ If ARP is wrong or spoofed, your traffic can go to the wrong machine, be dropped
 
 ```mermaid
 sequenceDiagram
-participant A as Host A
-participant Net as Broadcast
-participant B as Host B
+    participant A as Host A
+    participant Net as Broadcast
+    participant B as Host B
 
-A->>Net: ARP Who-has 192.168.1.20? Tell 192.168.1.10
-B-->>Net: ARP is-at 11:22:33:44:55:66
-Net-->>A: ARP reply
-A->>B: Frame delivered to MAC 11:22:33:44:55:66
+    A->>Net: ARP Who-has 192.168.1.20? Tell 192.168.1.10
+    B-->>Net: ARP is-at 11:22:33:44:55:66
+    Net-->>A: ARP reply
+    A->>B: Frame delivered to MAC 11:22:33:44:55:66
 ```
 
 ---
@@ -303,7 +301,7 @@ A->>B: Frame delivered to MAC 11:22:33:44:55:66
 
 Welcome to Day 15 of the Daily DevOps + SRE Challenge Series – Season 2! 🎉
 
-Today, you’ll dive into essential **Linux networking skills** through practical, story-based scenarios. You’ll configure IP addresses, set up namespaces, simulate routing, and debug traffic issues—all on your local machine without any complex setup. By the end, you’ll:
+Today, you'll dive into essential **Linux networking skills** through practical, story-based scenarios. You'll configure IP addresses, set up namespaces, simulate routing, and debug traffic issues—all on your local machine without any complex setup. By the end, you'll:
 
 * Understand and troubleshoot the **OSI & TCP/IP layers** in real-world failures.
 * Configure **IPv4/IPv6 addressing**, resolve subnetting conflicts, and simulate enterprise VPC designs.
@@ -314,12 +312,12 @@ Today, you’ll dive into essential **Linux networking skills** through practica
 
 ## Why This Matters?
 
-Networking is the backbone of everything—cloud apps, Kubernetes clusters, even CI/CD pipelines. If you can’t debug connectivity, you’ll get stuck in outages fast.
+Networking is the backbone of everything—cloud apps, Kubernetes clusters, even CI/CD pipelines. If you can't debug connectivity, you'll get stuck in outages fast.
 
-* **Real-World Edge:** Most outages aren’t due to servers crashing—they’re due to misconfigured routes, DNS failures, or firewall issues.
+* **Real-World Edge:** Most outages aren't due to servers crashing—they're due to misconfigured routes, DNS failures, or firewall issues.
 * **SRE Superpower:** Knowing the **why ping works but app fails** scenario makes you 10x faster in production war rooms.
 * **Cloud Readiness:** VPC, subnets, and dual-stack IPv4/IPv6 configs are daily tasks for AWS/GCP/Azure engineers.
-* **Interview Gold:** “Why can two hosts ping but not load HTTP?” or “How do you debug duplicate IP conflicts?”—classic SRE questions.
+* **Interview Gold:** "Why can two hosts ping but not load HTTP?" or "How do you debug duplicate IP conflicts?"—classic SRE questions.
 * **Security Awareness:** ARP spoofing and wrong subnet masks are real threats in production, not just lab theory.
 
 ---
@@ -337,7 +335,7 @@ At a fintech startup, payments randomly failed for EU customers. Engineers could
 **Ping works, but HTTP fails**
 Run python3 -m http.server 8080 in one namespace/VM.
 From another, ping works but block TCP port 8080 using iptables.
-👉 Mimics: “Why I can ping the server but the website isn’t loading?”
+👉 Mimics: "Why I can ping the server but the website isn't loading?"
 
 **Solution:**
 
@@ -368,18 +366,15 @@ ip netns exec srv iptables -D INPUT -p tcp --dport 8080 -j DROP
 
 ```mermaid
 flowchart LR
-C[Client] -->|ICMP Echo Request| S[Server]
-S -->|ICMP Echo Reply| C
-note right of S: ICMP works (L3)
-
-C -->|TCP SYN :8080| S
-S -->|iptables DROP| C
-note right of S: TCP blocked at server (L4)
-
-C -->|Fix: iptables -D ...| S
-S -->|TCP SYN/ACK| C
-C -->|HTTP GET| S
-S -->|HTTP 200| C
+    C[Client] -->|ICMP Echo Request| S[Server]
+    S -->|ICMP Echo Reply| C
+    C -->|TCP SYN :8080| S
+    S -->|iptables DROP| X[Dropped]
+    S -->|Fix: iptables -D| S2[Server Fixed]
+    C -->|TCP SYN :8080| S2
+    S2 -->|TCP SYN/ACK| C
+    C -->|HTTP GET| S2
+    S2 -->|HTTP 200| C
 ```
 
 *Note:* ping uses ICMP (L3). curl uses TCP (L4) + HTTP (L7). iptables blocked TCP/8080 — that's why ping succeeded but web failed.
@@ -389,7 +384,7 @@ S -->|HTTP 200| C
 **DNS Layer Check**
 Disable /etc/resolv.conf or block UDP 53.
 Test browsing (curl google.com fails, but curl 142.250.182.14 works).
-👉 Mimics: “App fails because DNS is misconfigured.”
+👉 Mimics: "App fails because DNS is misconfigured."
 
 **Solution:**
 
@@ -413,10 +408,10 @@ ip netns exec ns1 iptables -D OUTPUT -p udp --dport 53 -j DROP
 
 ```mermaid
 flowchart LR
-C[Client] -->|UDP DNS Query :53| DNS[Resolver]
-DNS --x|blocked| C
-C -->|HTTP to numeric IP| S[Remote Server]
-S -->|HTTP 200| C
+    C[Client] -->|UDP DNS Query :53| DNS[Resolver]
+    DNS -->|blocked| X[Dropped]
+    C -->|HTTP to numeric IP| S[Remote Server]
+    S -->|HTTP 200| C
 ```
 
 *Note:* block DNS (UDP/53) prevents name resolution; direct IP works.
@@ -426,7 +421,7 @@ S -->|HTTP 200| C
 **MTU Mismatch**
 Set MTU on one interface to 1400 and the other to 900.
 Try large file transfer with scp.
-👉 Mimics: “Packets drop due to MTU mismatch in VPN tunnels.”
+👉 Mimics: "Packets drop due to MTU mismatch in VPN tunnels."
 
 **Solution:**
 
@@ -457,18 +452,17 @@ ip netns exec b ip link set vb mtu 1400
 
 ```mermaid
 flowchart LR
-C[Client mtu=1400] -->|Large IP packet| Link[Link mtu=900]
-Link --x|can't forward| Router[drop or ICMP]
-Router -->|ICMP frag needed| C
-note right of Router: if ICMP blocked -> no PMTUD -> TCP stalls
-C -->|Fix: align MTU| Link
+    C[Client mtu=1400] -->|Large IP packet| Link[Link mtu=900]
+    Link -->|cannot forward| Router[drop or ICMP]
+    Router -->|ICMP frag needed| C
+    C -->|Fix: align MTU| Fixed[Link mtu=1400]
 ```
 
 ---
 
 **Layer 2 vs Layer 3 Failure**
 Assign two machines same subnet but no switch/bridge between them.
-👉 Mimics: “Why hosts on same subnet can’t reach each other?”
+👉 Mimics: "Why hosts on same subnet can't reach each other?"
 
 **Solution:**
 
@@ -496,11 +490,11 @@ ip netns exec n1 ping -c2 192.168.50.2    # ✅ works now
 
 ```mermaid
 flowchart LR
-A[Host A] -->|ARP Who-has| None[No shared L2 domain]
-None --x--> B[Host B]
-note right of None: ARP doesn't reach -> can't resolve MAC
-A -->|Fix: add bridge| BR[Bridge]
-BR --> B
+    A[Host A] -->|ARP Who-has| None[No shared L2 domain]
+    None -->|No path| X[Dropped]
+    B[Host B]
+    A -->|Fix: add bridge| BR[Bridge]
+    BR --> B
 ```
 
 ---
@@ -536,13 +530,12 @@ ip netns exec c1 sh -lc 'echo hi | nc -u 10.9.0.2 9001'  # UDP
 
 ```mermaid
 flowchart LR
-C[Client] -->|ICMP Echo| S[Server]
-S -->|ICMP Reply| C
-C -->|TCP SYN:8081| S
-S --x|No SYN/ACK| C
-note right of S: server might be down or firewall blocking
-C -->|UDP packet| S
-S -->|(no ACK required)| C
+    C[Client] -->|ICMP Echo| S[Server]
+    S -->|ICMP Reply| C
+    C -->|TCP SYN:8081| S
+    S -->|TCP SYN/ACK| C
+    C -->|UDP packet| S
+    S -->|no ACK required| C
 ```
 
 ---
@@ -551,7 +544,7 @@ S -->|(no ACK required)| C
 
 **Duplicate IP Conflict**
 Assign 192.168.1.10 to two hosts. Ping from a third host → observe flapping replies.
-👉 Mimics: “Two servers misconfigured with same IP.”
+👉 Mimics: "Two servers misconfigured with same IP."
 
 **Solution:**
 
@@ -589,26 +582,26 @@ ip netns exec h2 ip addr add 192.168.1.11/24 dev h2v
 
 ```mermaid
 sequenceDiagram
-participant H3 as Tester (h3)
-participant BR as Bridge
-participant H1 as Host1 (192.168.1.10 @ MAC A)
-participant H2 as Host2 (192.168.1.10 @ MAC B)
+    participant H3 as Tester (h3)
+    participant BR as Bridge
+    participant H1 as Host1 (192.168.1.10 @ MAC A)
+    participant H2 as Host2 (192.168.1.10 @ MAC B)
 
-H3->>BR: ARP Who has 192.168.1.10?
-BR->>H1: Who has?
-H1-->>BR: I am 192.168.1.10 at MAC A
-BR-->>H3: ARP reply MAC A
-BR->>H2: Who has?
-H2-->>BR: I am 192.168.1.10 at MAC B
-BR-->>H3: ARP reply MAC B
-Note over H3: Replies flap -> connectivity inconsistent
+    H3->>BR: ARP Who has 192.168.1.10?
+    BR->>H1: Who has?
+    H1-->>BR: I am 192.168.1.10 at MAC A
+    BR-->>H3: ARP reply MAC A
+    BR->>H2: Who has?
+    H2-->>BR: I am 192.168.1.10 at MAC B
+    BR-->>H3: ARP reply MAC B
+    Note over H3: Replies flap -> connectivity inconsistent
 ```
 
 ---
 
 **IPv6 Only Network**
 Assign IPv6 addresses only (`2001:db8::1/64`). Disable IPv4 → try reaching services.
-👉 Mimics: “Transitioning to IPv6 in enterprise.”
+👉 Mimics: "Transitioning to IPv6 in enterprise."
 
 **Solution:**
 
@@ -638,17 +631,17 @@ ip netns exec v6a ping -6 -c2 142.250.182.14     # ❌ cannot (v4 only target)
 
 ```mermaid
 flowchart LR
-A[IPv6-only Host] -->|IPv6 packet| B[IPv6 Server] -->|reply| A
-A -->|tries IPv4 address| C[IPv4-only Server]
-C --x|No route| A
-note right of C: IPv4 address unreachable from IPv6-only host without translator
+    A[IPv6-only Host] -->|IPv6 packet| B[IPv6 Server] 
+    B -->|reply| A
+    A -->|tries IPv4 address| C[IPv4-only Server]
+    C -->|No route| X[Dropped]
 ```
 
 ---
 
 **Wrong Subnet Mask**
 Host A: 192.168.1.10/24, Host B: 192.168.1.20/16. Traffic works one way but not the other.
-👉 Mimics: “Subnet mask mismatch during manual config.”
+👉 Mimics: "Subnet mask mismatch during manual config."
 
 **Solution:**
 
@@ -673,18 +666,18 @@ ip netns exec B ping -c2 192.168.1.10    # may ✅ (B thinks on-link)
 
 ```mermaid
 flowchart LR
-A[Host A 192.168.1.10/24] -->|Sees 192.168.1.20 as remote| GW[Gateway]
-B[Host B 192.168.1.20/16] -->|Sees 192.168.1.10 as local| A
-A -->|send via gateway| X[not delivered]
-B -->|ARP| A -->|reply| B
-Note over A,B: Asymmetric -> fix masks
+    A[Host A 192.168.1.10/24] -->|Sees 192.168.1.20 as remote| GW[Gateway]
+    B[Host B 192.168.1.20/16] -->|Sees 192.168.1.10 as local| A
+    A -->|send via gateway| X[not delivered]
+    B -->|ARP| A 
+    A -->|reply| B
 ```
 
 ---
 
 **Multiple NICs Routing**
 One host with 192.168.1.10 (LAN) and 10.0.0.10 (WAN). Configure routing → see which NIC is chosen.
-👉 Mimics: “Multi-homed servers with wrong default gateway.”
+👉 Mimics: "Multi-homed servers with wrong default gateway."
 
 **Solution:**
 
@@ -708,441 +701,4 @@ ip netns exec mh ip route add default via 192.168.1.1 dev mhv1 metric 200
 ip netns exec mh ip route show
 
 # Policy routing example (force source-based egress)
-ip netns exec mh ip rule add from 192.168.1.10/32 table 1
-ip netns exec mh ip route add default via 192.168.1.1 dev mhv1 table 1
-```
-
-**Interpretation:** Lower metric wins; use policy routing to pin traffic per source. **Fix:** Correct default gateway or add ip rule/tables.
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-A[Host with NIC1 192.168.1.10] -->|Default via 192.168.1.1 (metric 200)| GW1
-A -->|Default via 10.0.0.1 (metric 100)| GW2
-note right of A: metric 100 chosen -> uses GW2
-A -->|Fix: ip rule for source 192.168.1.10| GW1
-```
-
----
-
-**IPv4 ↔ IPv6 Connectivity**
-Try pinging an IPv4-only service from an IPv6-only host.
-👉 Mimics: “Why dual-stack migration is tricky.”
-
-**Solution:**
-
-```bash
-# Reuse IPv6-only ns from earlier
-# Test IPv4 literal via IPv6 stack (will fail)
-ip netns exec v6a ping -6 142.250.182.14    # ❌ cannot
-```
-
-**Interpretation:** Separate stacks; translation required. **Fix:** Provide dual-stack or NAT64/DNS64.
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-A[IPv6-only host] -->|IPv6 packet| B[IPv6 path]
-A --x|IPv4 target| C[IPv4 host]
-note right of C: translation required (NAT64/DNS64) or dual-stack
-```
-
----
-
-🔹 **3. Subnetting & CIDR**
-
-**Basic Subnet Split**
-Take 10.0.0.0/24.
-Create 4 subnets (/26) → assign to 4 namespaces.
-👉 Mimics: “Dividing network for teams.”
-
-**Solution:**
-
-```bash
-# Subnets: 10.0.0.0/26, 10.0.0.64/26, 10.0.0.128/26, 10.0.0.192/26
-ip netns add t1; ip netns add t2; ip netns add t3; ip netns add t4
-ip link add brs type bridge; ip link set brs up
-
-# helper to attach each ns
-for N in 1 2 3 4; do ip link add v$N type veth peer name p$N; done
-ip link set p1 master brs; ip link set p2 master brs; ip link set p3 master brs; ip link set p4 master brs
-ip link set v1 netns t1; ip link set v2 netns t2; ip link set v3 netns t3; ip link set v4 netns t4
-
-ip netns exec t1 ip addr add 10.0.0.1/26 dev v1; ip netns exec t1 ip link set v1 up
-ip netns exec t2 ip addr add 10.0.0.65/26 dev v2; ip netns exec t2 ip link set v2 up
-ip netns exec t3 ip addr add 10.0.0.129/26 dev v3; ip netns exec t3 ip link set v3 up
-ip netns exec t4 ip addr add 10.0.0.193/26 dev v4; ip netns exec t4 ip link set v4 up
-
-# Test within same /26 only (others need router)
-ip netns exec t1 ping -c2 10.0.0.2        # another host you'd add in same /26
-```
-
-**Interpretation:** Hosts in different /26s need routing.
-
-**Flow diagram:**
-
-```mermaid
-graph TD
-A[10.0.0.0/24] --> B[10.0.0.0/26 (Team1)]
-A --> C[10.0.0.64/26 (Team2)]
-A --> D[10.0.0.128/26 (Team3)]
-A --> E[10.0.0.192/26 (Team4)]
-Note right of B: cross /26 needs router
-```
-
----
-
-**Inter-Subnet Routing**
-Setup ns1: 10.0.1.1/24, ns2: 10.0.2.1/24, router with two NICs.
-Enable IP forwarding.
-👉 Mimics: “Routers connecting branch offices.”
-
-**Solution:**
-
-```bash
-ip netns add r; ip netns add n1; ip netns add n2
-# veths r<->n1 and r<->n2
-ip link add rn1 type veth peer name n1v
-ip link add rn2 type veth peer name n2v
-ip link set rn1 netns r; ip link set n1v netns n1
-ip link set rn2 netns r; ip link set n2v netns n2
-
-# IPs
-ip netns exec r  ip addr add 10.0.1.1/24 dev rn1
-ip netns exec n1 ip addr add 10.0.1.2/24 dev n1v
-ip netns exec r  ip addr add 10.0.2.1/24 dev rn2
-ip netns exec n2 ip addr add 10.0.2.2/24 dev n2v
-ip netns exec r ip link set rn1 up; ip netns exec r ip link set rn2 up
-ip netns exec n1 ip link set n1v up; ip netns exec n2 ip link set n2v up
-
-# Enable routing on router
-ip netns exec r sysctl -w net.ipv4.ip_forward=1
-
-# Set default routes on n1/n2
-ip netns exec n1 ip route add default via 10.0.1.1
-ip netns exec n2 ip route add default via 10.0.2.1
-
-# Test
-ip netns exec n1 ping -c2 10.0.2.2          # ✅ via router
-```
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-N1[10.0.1.2] -->|to 10.0.2.2| R[Router 10.0.1.1/10.0.2.1]
-R -->|forward| N2[10.0.2.2]
-```
-
----
-
-**Subnet Overlap Issue**
-Setup ns1: 192.168.0.0/24, ns2: 192.168.0.0/16.
-Try ping between them.
-👉 Mimics: “Merging two companies with overlapping IP ranges.”
-
-**Solution:**
-
-```bash
-ip netns add o1; ip netns add o2
-ip link add ov1 type veth peer name ov2
-ip link set ov1 netns o1; ip link set ov2 netns o2
-ip netns exec o1 ip addr add 192.168.0.10/24 dev ov1
-ip netns exec o2 ip addr add 192.168.0.20/16 dev ov2
-ip netns exec o1 ip link set ov1 up; ip netns exec o2 ip link set ov2 up
-
-# Test
-ip netns exec o1 ping -c2 192.168.0.20      # inconsistent / fails when routing involved
-
-# Interpretation: Overlap causes on-link vs routed mismatch -> blackholes.
-# Fix: renumber one side. Temporary: NAT at the boundary.
-```
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-A[Net1: 192.168.0.0/24] -->|thinks IP local| H1[192.168.0.20]
-B[Net2: 192.168.0.0/16] -->|thinks IP local| H2[192.168.0.20]
-Note over A,B: Overlap -> inconsistent on-link decisions -> blackholes
-Fix --> Renumber or NAT
-```
-
----
-
-**Restrict Access via CIDR**
-Run service on one namespace.
-Use iptables to allow only 10.0.0.0/28.
-👉 Mimics: “Firewall rules allowing only specific subnets.”
-
-**Solution:**
-
-```bash
-# Setup server and client
-ip netns add s; ip netns add c1; ip netns add c2
-ip link add brf type bridge; ip link set brf up
-
-# connect three namespaces
-for N in s c1 c2; do ip link add ${N}v type veth peer name ${N}p; done
-ip link set sp master brf; ip link set c1p master brf; ip link set c2p master brf
-ip link set sv netns s; ip link set c1v netns c1; ip link set c2v netns c2
-
-# addresses: allow only 10.0.0.0/28 (i.e., 10.0.0.1–14)
-ip netns exec s  ip addr add 10.0.0.5/24  dev sv;  ip netns exec s  ip link set sv up
-ip netns exec c1 ip addr add 10.0.0.10/24 dev c1v; ip netns exec c1 ip link set c1v up   # allowed
-ip netns exec c2 ip addr add 10.0.0.50/24 dev c2v; ip netns exec c2 ip link set c2v up   # blocked
-
-# start service
-ip netns exec s python3 -m http.server 8080 &
-
-# firewall allow only /28
-ip netns exec s iptables -A INPUT -p tcp --dport 8080 -s 10.0.0.0/28 -j ACCEPT
-ip netns exec s iptables -A INPUT -p tcp --dport 8080 -j DROP
-
-# Test
-ip netns exec c1 curl -m3 10.0.0.5:8080    # ✅ allowed
-ip netns exec c2 curl -m3 10.0.0.5:8080    # ❌ blocked
-
-# Fix: adjust CIDR as needed or remove rule.
-```
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-C1[10.0.0.10] -->|HTTP to 10.0.0.5:8080| S[Server]
-S -->|iptables: ACCEPT from 10.0.0.0/28| C1
-C2[10.0.0.50] -->|HTTP to 10.0.0.5:8080| S
-S -->|iptables: DROP| C2
-```
-
----
-
-**VPC Planning Simulation**
-Start with 10.0.0.0/16.
-Subdivide for 10 departments.
-👉 Mimics: “Cloud VPC CIDR allocation.”
-
-**Solution (planning steps):**
-
-```text
-- Base: 10.0.0.0/16 (65536 IPs)
-- Allocate /20 per department (4096 IPs each), contiguous blocks:
-  Dept1: 10.0.0.0/20
-  Dept2: 10.0.16.0/20
-  Dept3: 10.0.32.0/20
-  ...
-  Dept10: 10.0.144.0/20
-- Reserve 10.0.240.0/20 for shared services, 10.0.224.0/20 for transit/NAT.
-- For prod/stage inside each /20:
-  - Prod:   first /22 (e.g., 10.0.0.0/22)
-  - Staging: next /23 (e.g., 10.0.4.0/23)
-  - Dev:    next /23 (e.g., 10.0.6.0/23)
-- Ensure no overlaps; document route tables/NACLs per CIDR.
-```
-
-**Interpretation:** Leaves room for growth, easy aggregation (`/16` → `/20` → `/22`).
-
-**Flow diagram:**
-
-```mermaid
-graph TD
-A[10.0.0.0/16] --> B[Dept1: 10.0.0.0/20]
-A --> C[Dept2: 10.0.16.0/20]
-A --> D[Dept3: 10.0.32.0/20]
-A --> E[Reserve: 10.0.240.0/20]
-```
-
----
-
-🔹 **4. ARP**
-
-**Basic ARP Resolution**
-Setup 2 namespaces in same subnet. Ping once → check ip neigh show.
-👉 Mimics: “How ARP table populates in real systems.”
-
-**Solution:**
-
-```bash
-ip netns add a1; ip netns add a2
-ip link add a1v type veth peer name a2v
-ip link set a1v netns a1; ip link set a2v netns a2
-ip netns exec a1 ip addr add 172.16.0.1/24 dev a1v
-ip netns exec a2 ip addr add 172.16.0.2/24 dev a2v
-ip netns exec a1 ip link set a1v up; ip netns exec a2 ip link set a2v up
-
-ip netns exec a1 ping -c1 172.16.0.2
-ip netns exec a1 ip neigh show 172.16.0.2      # shows MAC learned (REACHABLE)
-```
-
-**Flow diagram:**
-
-```mermaid
-sequenceDiagram
-participant A as Host A (172.16.0.1)
-participant B as Host B (172.16.0.2)
-A->>B: ARP Who-has 172.16.0.2?
-B-->>A: ARP is-at 11:22:33:44:55:66
-A->>B: IP packet delivered to MAC 11:22:33:44:55:66
-```
-
----
-
-**Clear ARP Cache**
-Delete entry: `ip neigh flush all`. Ping again → watch new ARP request.
-👉 Mimics: “Network slow after cache invalidation.”
-
-**Solution:**
-
-```bash
-ip netns exec a1 ip neigh flush all
-ip netns exec a1 ip neigh show                 # empty/INCOMPLETE
-ip netns exec a1 tcpdump -i a1v -n arp &       # watch ARP who-has
-ip netns exec a1 ping -c1 172.16.0.2           # triggers fresh ARP
-```
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-A[Host A] -->|ARP who-has| B[Host B]
-B -->|ARP is-at| A
-```
-
----
-
-**Wrong MAC Binding**
-Add fake ARP entry: `ip neigh add 192.168.1.10 lladdr aa:bb:cc:dd:ee:ff dev veth0`. Ping → fails.
-👉 Mimics: “Static ARP misconfig breaks traffic.”
-
-**Solution (adapted to our ns/if names):**
-
-```bash
-# Inject wrong static ARP in a1 for a2
-ip netns exec a1 ip neigh add 172.16.0.2 lladdr aa:bb:cc:dd:ee:ff dev a1v nud permanent
-ip netns exec a1 ping -c1 172.16.0.2          # ❌ fails
-
-# Fix
-ip netns exec a1 ip neigh del 172.16.0.2 dev a1v
-ip netns exec a1 ping -c1 172.16.0.2          # ✅ works again
-```
-
-**Flow diagram:**
-
-```mermaid
-flowchart LR
-A[Host A] -->|send to MAC aa:bb:...| X[Wrong MAC]
-X --x--> B[Host B]
-note right of X: Packet lost (wrong MAC)
-```
-
----
-
-**Duplicate IP Detection**
-Two hosts claim same IP. Observe ARP table flapping.
-👉 Mimics: “DHCP assigns duplicate IP by mistake.”
-
-**Solution:**
-
-```bash
-# Make a2 also claim 172.16.0.1 (duplicate of a1)
-ip netns exec a2 ip addr flush dev a2v
-ip netns exec a2 ip addr add 172.16.0.1/24 dev a2v
-
-# From a1 or a test host, watch ARP
-ip netns exec a1 arping -I a1v -c 5 172.16.0.1   # multiple replies / MAC changes
-ip netns exec a1 ip neigh show 172.16.0.1        # MAC flaps
-
-# Fix: ensure unique IPs; revert a2 to 172.16.0.2/24
-ip netns exec a2 ip addr flush dev a2v
-ip netns exec a2 ip addr add 172.16.0.2/24 dev a2v
-```
-
-**Flow diagram:**
-
-```mermaid
-sequenceDiagram
-participant A as Host A
-participant B as Host B
-participant T as Tester
-T->>A: ARP who has 172.16.0.1?
-A-->>T: I am 172.16.0.1 MAC A
-B-->>T: I am 172.16.0.1 MAC B
-Note over T: multiple replies -> flapping
-```
-
----
-
-**ARP Spoofing Simulation**
-Three hosts: client, server, attacker. Attacker runs arpspoof → traffic rerouted.
-👉 Mimics: “Man-in-the-middle attack in LAN.”
-
-**Solution:**
-
-```bash
-# Setup client (c), server (s), attacker (x) on a bridge
-ip netns add c; ip netns add s; ip netns add x
-ip link add brA type bridge; ip link set brA up
-for N in c s x; do ip link add ${N}v type veth peer name ${N}p; done
-ip link set cp master brA; ip link set sp master brA; ip link set xp master brA
-ip link set cv netns c; ip link set sv netns s; ip link set xv netns x
-
-ip netns exec c ip addr add 10.8.0.10/24 dev cv; ip netns exec c ip link set cv up
-ip netns exec s ip addr add 10.8.0.20/24 dev sv; ip netns exec s ip link set sv up
-ip netns exec x ip addr add 10.8.0.30/24 dev xv; ip netns exec x ip link set xv up
-
-# Optional: treat server as "gateway" for demo or add a fake gw IP.
-# Run arpspoof from attacker (install dsniff if needed)
-# Spoof client into thinking server IP maps to attacker's MAC
-ip netns exec x arpspoof -i xv -t 10.8.0.10 10.8.0.20 &
-ip netns exec x arpspoof -i xv -t 10.8.0.20 10.8.0.10 &
-
-# Enable forwarding on attacker to keep traffic flowing
-ip netns exec x sysctl -w net.ipv4.ip_forward=1
-ip netns exec x tcpdump -i xv -n host 10.8.0.10 and host 10.8.0.20 &
-
-# Test from client to server
-ip netns exec c ping -c2 10.8.0.20         # ✅ goes via attacker now
-
-# Fix/Mitigation: kill arpspoof; use static ARP for gateway, enable DAI on switches, use TLS.
-```
-
-**Flow diagram (ARP spoof MITM):**
-
-```mermaid
-sequenceDiagram
-participant C as Client (10.8.0.10)
-participant X as Attacker (10.8.0.30)
-participant S as Server (10.8.0.20)
-
-X->>C: Fake ARP (10.8.0.20 is at MAC X)
-C->>X: Packets to server (X receives)
-X->>S: Forwards to server (or inspects)
-Note over C,X,S: Traffic flows via attacker -> MITM
-```
-
----
-
-# Final notes — cleanup & repo tips
-
-* Put this entire file into `day15-networking.md` in your repo.
-* Create `scripts/` for each challenge: `setup`, `break`, `test`, `fix`, `cleanup` — I can generate those scripts for you.
-* When running labs: use a disposable VM (or a non-production machine). `ip netns` requires root.
-* After testing, run cleanup for each namespace & bridges, and check `iptables -L` inside namespaces to remove persistent rules.
-
-**Generic cleanup example**
-
-```bash
-# list
-ip netns list
-# delete individually
-ip netns delete srv
-ip netns delete cli
-# remove bridges (if created)
-ip link set br0 down; ip link delete br0 type bridge
-```
-
----
-
+ip netns exec mh ip rule add from 192.168.1.10/32 table

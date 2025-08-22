@@ -178,7 +178,7 @@ If you don't know addressing basics, you'll misconfigure masks, gateways, or try
 
 ---
 
-### Mermaid: Routing decision (simple)
+### Routing decision (simple)
 
 ```mermaid
 flowchart LR
@@ -203,7 +203,7 @@ To allocate IPs to teams, limit broadcast domains, design VPCs, and avoid overla
 
 ### How CIDR works (simple)
 
-* `10.0.0.0/24` → addresses `10.0.0.0`–`10.0.0.255`.
+*  `10.0.0.0/24` → addresses `10.0.0.0`–`10.0.0.255`.
 * Splitting `10.0.0.0/24` into `/26` yields:
 
   * `10.0.0.0/26` (0–63)
@@ -227,7 +227,7 @@ To allocate IPs to teams, limit broadcast domains, design VPCs, and avoid overla
 
 ---
 
-### Mermaid: Subnet split
+### Subnet split
 
 ```mermaid
 graph TD
@@ -273,7 +273,7 @@ If ARP is wrong or spoofed, your traffic can go to the wrong machine, be dropped
 
 ---
 
-### Mermaid: ARP sequence
+### ARP sequence
 
 ```mermaid
 sequenceDiagram
@@ -289,43 +289,140 @@ sequenceDiagram
 
 ---
 
-# Now — Challenges (exactly as you provided)
+## Additional Theory Concepts
 
-> From here on, I paste **your whole challenge set verbatim** (I did not change or remove anything). After each challenge block I add a **Mermaid flow diagram** and a short **mapping note** showing packet travel, where it breaks, and where to fix it.
+### DNS (Domain Name System) — Introduction
 
----
+**What is it?**
+DNS translates human-readable domain names (like google.com) to IP addresses. It uses a hierarchical, distributed database.
 
----
-
-## Introduction
-
-Welcome to Day 15 of the Daily DevOps + SRE Challenge Series – Season 2! 🎉
-
-Today, you'll dive into essential **Linux networking skills** through practical, story-based scenarios. You'll configure IP addresses, set up namespaces, simulate routing, and debug traffic issues—all on your local machine without any complex setup. By the end, you'll:
-
-* Understand and troubleshoot the **OSI & TCP/IP layers** in real-world failures.
-* Configure **IPv4/IPv6 addressing**, resolve subnetting conflicts, and simulate enterprise VPC designs.
-* Master **ARP behavior**, from cache flushing to spoofing attacks.
-* Gain hands-on skills to debug outages with tools like iptables, ip, and tcpdump.
+**Why learn it?**
+Because most network connections start with a DNS lookup. If DNS fails, your application fails—even if the target server is reachable by IP.
 
 ---
 
-## Why This Matters?
+### How DNS works (simple)
 
-Networking is the backbone of everything—cloud apps, Kubernetes clusters, even CI/CD pipelines. If you can't debug connectivity, you'll get stuck in outages fast.
-
-* **Real-World Edge:** Most outages aren't due to servers crashing—they're due to misconfigured routes, DNS failures, or firewall issues.
-* **SRE Superpower:** Knowing the **why ping works but app fails** scenario makes you 10x faster in production war rooms.
-* **Cloud Readiness:** VPC, subnets, and dual-stack IPv4/IPv6 configs are daily tasks for AWS/GCP/Azure engineers.
-* **Interview Gold:** "Why can two hosts ping but not load HTTP?" or "How do you debug duplicate IP conflicts?"—classic SRE questions.
-* **Security Awareness:** ARP spoofing and wrong subnet masks are real threats in production, not just lab theory.
+1. Application requests resolution (e.g., browser asks for google.com).
+2. The request is sent to a DNS resolver (usually provided by ISP or public ones like 8.8.8.8).
+3. The resolver queries the root servers, then TLD servers, then authoritative servers for the domain.
+4. The IP address is returned and cached.
 
 ---
 
-## Real-World Save 🌍
+### Key concepts
 
-At a fintech startup, payments randomly failed for EU customers. Engineers could **ping servers but HTTP calls kept timing out**. Debugging revealed a firewall rule blocking port 443 on just one subnet. Fixing that restored global transactions. Knowing **layer-by-layer troubleshooting** saved millions in lost revenue.
+- **Record types:** A (IPv4), AAAA (IPv6), CNAME (alias), MX (mail), etc.
+- **Port:** UDP 53 (queries), TCP 53 (large responses or zone transfers).
+- **Tools:** `dig`, `nslookup`, `host`.
 
+---
+
+### Common issues
+
+- Misconfigured `/etc/resolv.conf`
+- Firewall blocking UDP 53
+- Slow DNS responses (high latency)
+
+---
+
+### DNS lookup
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as Resolver
+    participant A as Authoritative Server
+
+    C->>R: Query for google.com
+    R->>A: Query
+    A-->>R: Response (IP)
+    R-->>C: Response (IP)
+```
+
+---
+
+### MTU (Maximum Transmission Unit) — Introduction
+
+**What is it?**
+MTU is the maximum size of a packet that can be transmitted without fragmentation over a network interface.
+
+**Why learn it?**
+If packets are too large for a link, they get fragmented (which adds overhead) or dropped (which breaks connectivity). This is common in VPNs and tunnels.
+
+---
+
+### How MTU works (simple)
+
+- Each link has an MTU (e.g., Ethernet is 1500 bytes).
+- If a packet is larger than the MTU, it is fragmented into smaller packets (if allowed) or an ICMP "need to fragment" error is sent.
+- **Path MTU Discovery (PMTUD)** is the process of determining the smallest MTU along the path to avoid fragmentation.
+
+---
+
+### Common issues
+
+- MTU mismatch between endpoints or intermediate links causes black holes for large packets.
+- VPNs reduce effective MTU due to encapsulation overhead.
+
+---
+
+### PMTUD
+
+```mermaid
+sequenceDiagram
+    participant S as Sender
+    participant R as Router
+    participant D as Dest
+
+    S->>D: Large packet (1500 bytes)
+    R->>S: ICMP Frag Needed (MTU=1400)
+    S->>D: Packet split to 1400
+    D-->>S: ACK
+```
+
+---
+
+### Routing (Multiple NICs, Policy Routing) — Introduction
+
+**What is it?**
+Routing decides which interface to use to send a packet. Policy routing allows routing decisions based on more than just the destination IP (e.g., source IP, protocol).
+
+**Why learn it?**
+Multi-homed hosts (multiple NICs) may have complex routing requirements. Wrong routing can cause asymmetric paths or failures.
+
+---
+
+### How routing works (simple)
+
+- The kernel uses the routing table to decide the next hop.
+- Default route (0.0.0.0/0) is used when no specific route matches.
+- **Metric** is used to choose between multiple routes to the same destination (lower is better).
+- **Policy routing** uses multiple routing tables selected by rules (e.g., from a certain source IP, use a different table).
+
+---
+
+### Common commands
+
+- `ip route show`
+- `ip rule list` (for policy routing)
+- `ip route add ... metric ...`
+- `ip rule add from <IP> table <table>`
+
+---
+
+### Routing decision
+
+```mermaid
+flowchart LR
+    P[Packet] --> R[Routing Table]
+    R -->|match| I[Interface]
+    R -->|no match| D[Default Gateway]
+```
+
+---
+---
+---
 ---
 
 ## Challenges
@@ -701,4 +798,31 @@ ip netns exec mh ip route add default via 192.168.1.1 dev mhv1 metric 200
 ip netns exec mh ip route show
 
 # Policy routing example (force source-based egress)
-ip netns exec mh ip rule add from 192.168.1.10/32 table
+ip netns exec mh ip rule add from 192.168.1.10/32 table 100
+ip netns exec mh ip route add default via 192.168.1.1 dev mhv1 table 100
+ip netns exec mh ip rule list
+```
+
+**Flow diagram:**
+
+```mermaid
+flowchart TD
+    subgraph Multi-homed Host
+        NIC1[eth0: 192.168.1.10/24]
+        NIC2[eth1: 10.0.0.10/24]
+    end
+
+    NIC1 -->|default route metric 200| GW1[192.168.1.1]
+    NIC2 -->|default route metric 100| GW2[10.0.0.1]
+    
+    GW1 --> Internet
+    GW2 --> Internet
+
+    Note[Traffic prefers lower metric: uses GW2]
+```
+
+*Note:* The host will prefer the route with lower metric (100) for most traffic. Policy routing can override this based on source IP.
+
+---
+
+This completes the full networking challenge with comprehensive theory and practical exercises. The additional theory sections cover DNS, MTU, and routing concepts that are essential for complete networking understanding.

@@ -125,8 +125,8 @@ UDP is a connectionless protocol that provides a simple, unreliable datagram ser
 flowchart TD
     A[Application Layer] --> B{Choose Transport Protocol}
     
-    B -->|Reliable Data| C[TCP]
-    B -->|Low Latency| D[UDP]
+    B --> |Reliable Data| C[TCP]
+    B --> |Low Latency| D[UDP]
     
     subgraph C[TCP Characteristics]
         C1[Connection-oriented]
@@ -378,34 +378,33 @@ curl -v http://example.com
 
 👉 `dig` uses UDP, while `curl` establishes a TCP handshake.
 
-📌 **Task 3: Simulate packet loss and test**
+📌 **Task 3: Check if a specific TCP port is open**
 
 ```bash
-sudo tc qdisc add dev eth0 root netem loss 20%
-ping google.com
+nc -zv google.com 80
 ```
 
-👉 Notice TCP retries vs UDP packet loss.
+👉 Tests if port 80 is open on google.com
 
-📌 **Task 4: Run throughput test**
+📌 **Task 4: Check if a specific UDP port is open**
 
 ```bash
-iperf3 -s   # server
-iperf3 -c <server-ip> -u -b 10M   # UDP client
-iperf3 -c <server-ip>             # TCP client
+nc -zvu 8.8.8.8 53
 ```
 
-📌 **Task 5: Capture packets**
+👉 Tests if DNS port (53) is open on Google's DNS server
+
+📌 **Task 5: View active TCP connections**
 
 ```bash
-sudo tcpdump -i eth0 port 80 or port 53 -nn
+netstat -t
 ```
 
-👉 Watch TCP 3-way handshake vs UDP datagrams.
+👉 Shows all active TCP connections on your system
 
 ---
 
-### 🔹 Scenario 2: ICMP (ping & traceroute)
+### 🔹 Scenario 2: ICMP (ping & traceroute) - Simplified
 
 **Diagram – Traceroute Operation**
 
@@ -428,45 +427,43 @@ sequenceDiagram
     Target->>Sender: ICMP Echo Reply/Destination Unreachable
 ```
 
-📌 **Task 1: Test reachability**
+📌 **Task 1: Test basic connectivity**
 
 ```bash
 ping -c 4 google.com
 ```
 
-📌 **Task 2: Trace packet path**
+📌 **Task 2: Trace the network path**
 
 ```bash
 traceroute google.com
-# Alternative:
-mtr google.com
 ```
 
-📌 **Task 3: Capture ICMP packets**
+📌 **Task 3: Test connectivity to a specific port**
 
 ```bash
-sudo tcpdump -i eth0 icmp
+ping -c 4 google.com
 ```
 
-📌 **Task 4: Simulate ICMP block**
+📌 **Task 4: Check if a host is reachable with timestamp**
 
 ```bash
-sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
-ping google.com   # will fail
+ping -c 4 -D google.com
 ```
 
-📌 **Task 5: Create monitoring script**
+👉 Adds timestamp to each ping response
+
+📌 **Task 5: Test network quality with mtr**
 
 ```bash
-while true; do
-  ping -c1 google.com || echo "ALERT: Host unreachable!"
-  sleep 5
-done
+mtr --report google.com
 ```
+
+👉 Combines ping and traceroute functionality
 
 ---
 
-### 🔹 Scenario 3: DNS Troubleshooting
+### 🔹 Scenario 3: DNS Troubleshooting (Simplified)
 
 **Diagram – DNS Query Types**
 
@@ -495,35 +492,40 @@ flowchart TD
 cat /etc/resolv.conf
 ```
 
-📌 **Task 2: Query DNS**
+📌 **Task 2: Query DNS records**
 
 ```bash
 dig google.com
-nslookup openai.com
 ```
 
-📌 **Task 3: Configure caching resolver**
+📌 **Task 3: Query specific DNS record types**
 
 ```bash
-sudo apt install dnsmasq
-sudo systemctl enable dnsmasq --now
+dig google.com A
+dig google.com MX
 ```
 
-📌 **Task 4: Test DNSSEC**
+👉 Gets different types of DNS records
+
+📌 **Task 4: Flush DNS cache (if applicable)**
 
 ```bash
-dig +dnssec +multi example.com
+sudo systemd-resolve --flush-caches
 ```
 
-📌 **Task 5: Capture DNS traffic**
+👉 Clears local DNS cache (systemd systems)
+
+📌 **Task 5: Test DNS resolution speed**
 
 ```bash
-sudo tcpdump -i eth0 port 53
+time dig google.com
 ```
+
+👉 Measures how long DNS resolution takes
 
 ---
 
-### 🔹 Scenario 4: DHCP Assignment Issues
+### 🔹 Scenario 4: DHCP Assignment Issues (Simplified)
 
 **Diagram – DHCP Lease Process**
 
@@ -539,38 +541,44 @@ timeline
         Lease Expiration : IP address released
 ```
 
-📌 **Task 1: Verify IP lease**
+📌 **Task 1: Check current IP configuration**
 
 ```bash
 ip addr show
-journalctl -u NetworkManager | grep DHCP
 ```
 
-📌 **Task 2: Release & renew lease**
+📌 **Task 2: Release and renew DHCP lease**
 
 ```bash
 sudo dhclient -r
 sudo dhclient
 ```
 
-📌 **Task 3: Set fallback static IP**
+📌 **Task 3: Check DHCP client status**
 
 ```bash
-sudo ip addr add 192.168.1.50/24 dev eth0
+journalctl -u systemd-networkd | grep DHCP
 ```
 
-📌 **Task 4: Simulate DHCP conflict**
-Run two DHCP servers → check logs for conflicts.
+👉 Views DHCP-related logs
 
-📌 **Task 5: Capture DHCP handshake**
+📌 **Task 4: Set a temporary static IP**
 
 ```bash
-sudo tcpdump -i eth0 port 67 or port 68 -n
+sudo ip addr add 192.168.1.100/24 dev eth0
 ```
+
+📌 **Task 5: Check network connectivity**
+
+```bash
+ping -c 4 8.8.8.8
+```
+
+👉 Tests if you have internet access after DHCP changes
 
 ---
 
-### 🔹 Scenario 5: HTTP/HTTPS Debugging
+### 🔹 Scenario 5: HTTP/HTTPS Debugging (Simplified)
 
 **Diagram – HTTP Request/Response**
 
@@ -586,38 +594,40 @@ sequenceDiagram
     Server->>Client: HTTP/1.1 200 OK<br/>Content-Type: text/html<br/>Content-Length: 1256<br/><br/><html>...</html>
 ```
 
-📌 **Task 1: Verify services**
+📌 **Task 1: Check if web ports are open**
 
 ```bash
 ss -tuln | grep :80
 ss -tuln | grep :443
 ```
 
-📌 **Task 2: Debug SSL handshake**
+📌 **Task 2: Test HTTP connectivity**
 
 ```bash
-curl -vk https://yoursite.com
-openssl s_client -connect example.com:443 -servername example.com
+curl -I http://example.com
 ```
 
-📌 **Task 3: Create self-signed cert**
+👉 Gets only HTTP headers
+
+📌 **Task 3: Test HTTPS connectivity**
 
 ```bash
-openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes
+curl -I https://example.com
 ```
 
-📌 **Task 4: Enforce HTTPS**
-In Nginx:
+📌 **Task 4: Check SSL certificate validity**
 
-```nginx
-server {
-    listen 80;
-    return 301 https://$host$request_uri;
-}
+```bash
+curl -v https://example.com 2>&1 | grep "SSL certificate"
 ```
 
-📌 **Task 5: Simulate MITM**
-Install self-signed CA → client warns about untrusted cert.
+📌 **Task 5: Test website loading time**
+
+```bash
+time curl -s -o /dev/null https://example.com
+```
+
+👉 Measures how long a website takes to load
 
 ---
 
